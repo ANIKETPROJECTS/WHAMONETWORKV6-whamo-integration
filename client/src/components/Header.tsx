@@ -658,8 +658,53 @@ export function Header({
                 Help
               </MenubarTrigger>
               <MenubarContent>
-                <MenubarItem>WHAMO Help</MenubarItem>
-                <MenubarItem>Shortcuts</MenubarItem>
+                <Dialog open={showHelp} onOpenChange={setShowHelp}>
+                  <DialogTrigger asChild>
+                    <MenubarItem onSelect={(e) => e.preventDefault()} className="gap-2">
+                      <Info className="w-4 h-4" /> Help Content
+                    </MenubarItem>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto text-black">
+                    <DialogHeader>
+                      <DialogTitle>How to use this Software</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <section>
+                        <h4 className="font-semibold text-lg">Introduction</h4>
+                        <p className="text-sm text-muted-foreground">This hydraulic transient analysis software allows you to design and simulate water networks, analyzing pressure surges and flow changes over time.</p>
+                      </section>
+                      <section>
+                        <h4 className="font-semibold text-base">Designing your Network</h4>
+                        <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+                          <li>Use the **Insert** menu or Toolbar to add Reservoirs, Nodes, Junctions, Surge Tanks, and Flow Boundaries.</li>
+                          <li>Click and drag from a blue dot on one node to another to create a **Conduit** (pipe).</li>
+                          <li>Double-click on any element to edit its properties (Elevation, Length, Diameter, etc.) in the sidebar.</li>
+                        </ul>
+                      </section>
+                      <section>
+                        <h4 className="font-semibold text-base">Simulation & Output</h4>
+                        <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+                          <li>Set your simulation time and steps in **Tools &gt; Computation Parameters**.</li>
+                          <li>Configure which variables you want to track in **Tools &gt; Output Requests**.</li>
+                          <li>Use **Generate .INP** to get the input file or **Generate .OUT** to run the simulation and get results.</li>
+                        </ul>
+                      </section>
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={() => setShowHelp(false)}>Close</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+
+                <MenubarItem
+                  onClick={() => {
+                    const event = new CustomEvent('toggle-shortcut-console');
+                    window.dispatchEvent(event);
+                  }}
+                  className="gap-2"
+                >
+                  <Layout className="w-4 h-4" /> Shortcuts
+                </MenubarItem>
               </MenubarContent>
             </MenubarMenu>
           </Menubar>
