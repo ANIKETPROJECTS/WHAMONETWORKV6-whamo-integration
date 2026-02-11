@@ -63,9 +63,11 @@ import { useToast } from "@/hooks/use-toast";
 import { generateSystemDiagramSVG } from "@/lib/diagram-generator";
 import folderIcon from "@assets/open-folder_1770356038145.png";
 
+import { FileNameDialog } from "@/components/FileNameDialog";
+
 interface HeaderProps {
-  onExport: () => void;
-  onGenerateOut: () => void;
+  onExport: (fileName?: string) => void;
+  onGenerateOut: (fileName?: string) => void;
   isGeneratingOut: boolean;
   onSave: () => void;
   onLoad: () => void;
@@ -81,6 +83,8 @@ export function Header({
   onShowDiagram,
 }: HeaderProps) {
   const { toast } = useToast();
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [isOutDialogOpen, setIsOutDialogOpen] = useState(false);
   const {
     addNode,
     clearNetwork,
@@ -131,7 +135,7 @@ export function Header({
 
   const availableVars = ["Q", "HEAD", "ELEV", "VEL", "PRESS", "PIEZHEAD"];
 
-  const handleGenerateOutDirectly = async () => {
+  const handleGenerateOutDirectly = async (fileName?: string) => {
     try {
       // 1. Generate INP content from current state
       const { generateInpFile } = await import("@/lib/inp-generator");
@@ -152,7 +156,7 @@ export function Header({
       const blob = await response.blob();
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = "network.out";
+      link.download = `${fileName || "network"}.out`;
       link.click();
       toast({
         title: "Success",
@@ -166,6 +170,10 @@ export function Header({
         variant: "destructive",
       });
     }
+  };
+
+  const handleOutConfirm = (fileName: string) => {
+    handleGenerateOutDirectly(fileName);
   };
 
   return (
@@ -223,7 +231,7 @@ export function Header({
                 >
                   <Share2 className="w-4 h-4" /> Share
                 </MenubarItem>
-                <MenubarItem onClick={onExport} className="gap-2">
+                <MenubarItem onClick={() => setIsExportDialogOpen(true)} className="gap-2">
                   <DownloadCloud className="w-4 h-4" /> Download (.inp)
                 </MenubarItem>
                 <MenubarSeparator />
@@ -643,7 +651,7 @@ export function Header({
           <Button
             variant="default"
             size="sm"
-            onClick={onExport}
+            onClick={() => setIsExportDialogOpen(true)}
             className="h-9 px-6 rounded-full bg-[#1a73e8] hover:bg-[#1557b0] text-white font-medium shadow-sm transition-all"
             data-testid="button-generate-inp"
           >
@@ -654,7 +662,7 @@ export function Header({
           <Button
             variant="outline"
             size="sm"
-            onClick={handleGenerateOutDirectly}
+            onClick={() => setIsOutDialogOpen(true)}
             disabled={isGeneratingOut}
             className="h-9 px-6 rounded-full border-[#1a73e8] text-[#1a73e8] hover:bg-[#1a73e8]/10 font-medium shadow-sm transition-all"
             data-testid="button-generate-out"
@@ -664,6 +672,20 @@ export function Header({
           </Button>
         </div>
       </div>
+      <FileNameDialog
+        isOpen={isExportDialogOpen}
+        onClose={() => setIsExportDialogOpen(false)}
+        onConfirm={onExport}
+        title="Download .INP File"
+        defaultFileName={projectName}
+      />
+      <FileNameDialog
+        isOpen={isOutDialogOpen}
+        onClose={() => setIsOutDialogOpen(false)}
+        onConfirm={handleOutConfirm}
+        title="Generate .OUT File"
+        defaultFileName={projectName}
+      />
     </div>
   );
 }

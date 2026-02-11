@@ -38,7 +38,9 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 
-export function Toolbar({ onExport, onSave, onLoad }: { onExport: () => void, onSave: () => void, onLoad: () => void }) {
+import { FileNameDialog } from "./FileNameDialog";
+
+export function Toolbar({ onExport, onSave, onLoad }: { onExport: (fileName?: string) => void, onSave: () => void, onLoad: () => void }) {
   const { 
     addNode, 
     clearNetwork, 
@@ -48,12 +50,15 @@ export function Toolbar({ onExport, onSave, onLoad }: { onExport: () => void, on
     updateComputationalParams,
     outputRequests,
     addOutputRequest,
-    removeOutputRequest
+    removeOutputRequest,
+    projectName,
   } = useNetworkStore();
 
   const [localParams, setLocalParams] = useState(computationalParams);
   const [selectedElementId, setSelectedElementId] = useState<string>("");
   const [selectedVars, setSelectedVars] = useState<string[]>([]);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [isOutDialogOpen, setIsOutDialogOpen] = useState(false);
 
   const handleAddRequest = () => {
     if (!selectedElementId || selectedVars.length === 0) return;
@@ -82,7 +87,7 @@ export function Toolbar({ onExport, onSave, onLoad }: { onExport: () => void, on
     { label: 'Flow BC', icon: ArrowRightCircle, action: () => addNode('flowBoundary', { x: 50, y: 150 }), color: 'text-green-600' },
   ];
 
-  const handleRunWhamo = async () => {
+  const handleRunWhamo = async (fileName?: string) => {
     try {
       // 1. Generate INP content from current state
       const { generateInpFile } = await import('@/lib/inp-generator');
@@ -103,7 +108,7 @@ export function Toolbar({ onExport, onSave, onLoad }: { onExport: () => void, on
       const blob = await response.blob();
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = "network.out";
+      link.download = `${fileName || "network"}.out`;
       link.click();
     } catch (error: any) {
       console.error("WHAMO Error:", error);
@@ -320,13 +325,13 @@ export function Toolbar({ onExport, onSave, onLoad }: { onExport: () => void, on
             <TooltipContent>Save Project State</TooltipContent>
           </Tooltip>
 
-          <Button onClick={onExport} className="ml-2 shadow-lg shadow-primary/20" data-testid="button-generate-inp">
+          <Button onClick={() => setIsExportDialogOpen(true)} className="ml-2 shadow-lg shadow-primary/20" data-testid="button-generate-inp">
             <Download className="w-4 h-4 mr-2" />
             Generate .INP
           </Button>
 
           <Button 
-            onClick={handleRunWhamo} 
+            onClick={() => setIsOutDialogOpen(true)} 
             variant="outline" 
             className="ml-2 border-primary text-primary hover:bg-primary/10"
             data-testid="button-generate-out"
@@ -336,6 +341,20 @@ export function Toolbar({ onExport, onSave, onLoad }: { onExport: () => void, on
           </Button>
         </div>
       </div>
+      <FileNameDialog
+        isOpen={isExportDialogOpen}
+        onClose={() => setIsExportDialogOpen(false)}
+        onConfirm={onExport}
+        title="Download .INP File"
+        defaultFileName={projectName}
+      />
+      <FileNameDialog
+        isOpen={isOutDialogOpen}
+        onClose={() => setIsOutDialogOpen(false)}
+        onConfirm={handleRunWhamo}
+        title="Generate .OUT File"
+        defaultFileName={projectName}
+      />
     </div>
   );
 }
